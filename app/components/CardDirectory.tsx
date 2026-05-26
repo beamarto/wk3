@@ -451,14 +451,36 @@ export default function CardDirectory({
                         }
                         placeholder="Company / café"
                       />
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg"
-                        onChange={(e) =>
-                          setEditPhoto(e.target.files?.[0] ?? null)
-                        }
-                        className="w-full text-xs text-zinc-500"
-                      />
+                      <div className="rounded-lg border border-dashed border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-950">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                          Profile photo
+                        </label>
+                        <div className="mb-2 flex items-center gap-3">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              editPhoto
+                                ? URL.createObjectURL(editPhoto)
+                                : cardAvatar(card)
+                            }
+                            alt=""
+                            className="h-12 w-12 rounded-full object-cover ring-2 ring-zinc-200"
+                          />
+                          <span className="text-xs text-zinc-500">
+                            {editPhoto
+                              ? "New photo selected"
+                              : "Upload to replace current photo"}
+                          </span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={(e) =>
+                            setEditPhoto(e.target.files?.[0] ?? null)
+                          }
+                          className="w-full text-xs text-zinc-500 file:mr-3 file:rounded-full file:border-0 file:bg-amber-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-amber-900"
+                        />
+                      </div>
                       <BioTextarea
                         value={editFormData.bio}
                         onChange={(bio) =>
@@ -520,7 +542,7 @@ export default function CardDirectory({
                               onClick={() => startEdit(card)}
                               className="rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase text-amber-800 hover:bg-amber-700 hover:text-white"
                             >
-                              Edit card
+                              Edit card & photo
                             </button>
                           )}
                           {onDeleteRequest && (
