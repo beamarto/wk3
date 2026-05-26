@@ -296,6 +296,13 @@ export default function CardDirectory({
                     width={56}
                     height={56}
                     className="h-14 w-14 rounded-full bg-white object-cover ring-2 ring-zinc-200 dark:ring-zinc-700"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.dataset.fallback) {
+                        img.dataset.fallback = "1";
+                        img.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(card.name)}`;
+                      }
+                    }}
                   />
                   <div className="min-w-0 flex-1">
                     {isEditing && editFormData ? (

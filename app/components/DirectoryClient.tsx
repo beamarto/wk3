@@ -4,7 +4,11 @@ import AuthButton from "@/app/components/AuthButton";
 import CardDirectory from "@/app/components/CardDirectory";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
 import { supabase } from "@/lib/supabase";
-import { getStoragePathFromPublicUrl, uploadProfilePhoto } from "@/lib/storage";
+import {
+  getStoragePathFromPublicUrl,
+  saveProfilePhotoUrl,
+  uploadProfilePhoto,
+} from "@/lib/storage";
 import type { CardWithCategory, Category } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
@@ -84,6 +88,32 @@ export default function DirectoryClient({
     return () => subscription.unsubscribe();
   }, [router, refreshCategories]);
 
+  const attachPhotoToCard = async (cardId: string, file: File) => {
+    const { url, error: uploadError } = await uploadProfilePhoto(
+      supabase,
+      cardId,
+      file,
+    );
+    if (uploadError) {
+      toast.error(`Photo upload failed: ${uploadError}`, { duration: 6000 });
+      return false;
+    }
+    if (!url) {
+      toast.error("Photo upload failed.", { duration: 6000 });
+      return false;
+    }
+
+    const updateError = await saveProfilePhotoUrl(supabase, cardId, url);
+    if (updateError) {
+      toast.error(
+        `Photo uploaded but could not link to card: ${updateError}. Run supabase/step2b-cards-photo-update.sql if using public submit, or check admin RLS.`,
+        { duration: 8000 },
+      );
+      return false;
+    }
+    return true;
+  };
+
   const handleAdd = async () => {
     const { name, title, email, phone, website, category_id } = addFormData;
     if (!name.trim()) {
@@ -162,12 +192,10 @@ export default function DirectoryClient({
     }
 
     if (photoFile) {
-      const photoUrl = await uploadProfilePhoto(supabase, id, photoFile);
-      if (photoUrl) {
-        await supabase
-          .from("cards")
-          .update({ profile_photo_url: photoUrl })
-          .eq("id", id);
+      const photoOk = await attachPhotoToCard(id, photoFile);
+      if (!photoOk) {
+        await refreshCards();
+        return false;
       }
     }
 

@@ -1,5 +1,5 @@
 import { getSupabaseKey, getSupabaseUrl } from "@/lib/env";
-import { uploadProfilePhoto } from "@/lib/storage";
+import { saveProfilePhotoUrl, uploadProfilePhoto } from "@/lib/storage";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -62,12 +62,20 @@ export async function POST(request: Request) {
 
     let photoUrl: string | null = null;
     if (photo && photo.size > 0) {
-      photoUrl = await uploadProfilePhoto(supabase, card.id, photo);
-      if (photoUrl) {
-        await supabase
-          .from("cards")
-          .update({ profile_photo_url: photoUrl })
-          .eq("id", card.id);
+      const upload = await uploadProfilePhoto(supabase, card.id, photo);
+      if (upload.error) {
+        console.error("Photo upload failed:", upload.error);
+      } else if (upload.url) {
+        photoUrl = upload.url;
+        const linkError = await saveProfilePhotoUrl(
+          supabase,
+          card.id,
+          upload.url,
+        );
+        if (linkError) {
+          console.error("Could not save profile_photo_url:", linkError);
+          photoUrl = null;
+        }
       }
     }
 
