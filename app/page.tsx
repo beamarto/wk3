@@ -1,10 +1,12 @@
-import CardDirectory from "@/app/components/CardDirectory";
-import { supabase } from "@/lib/supabase";
+import DirectoryClient from "@/app/components/DirectoryClient";
+import { createClient } from "@/lib/supabase-server";
 import type { CardWithCategory, Category } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  const supabase = await createClient();
+
   const [cardsResult, categoriesResult] = await Promise.all([
     supabase
       .from("cards")
@@ -23,7 +25,8 @@ export default async function Home() {
         </h1>
         <p className="mt-4 text-zinc-600 dark:text-zinc-400">{message}</p>
         <p className="mt-2 text-sm text-zinc-500">
-          Check Supabase RLS policies (anon SELECT) and your .env variables.
+          Check Supabase RLS policies (anon SELECT) and your environment
+          variables.
         </p>
       </div>
     );
@@ -33,8 +36,6 @@ export default async function Home() {
   const categories = (categoriesResult.data ?? []) as Category[];
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-amber-50 via-white to-zinc-50 dark:from-zinc-950 dark:via-zinc-900 dark:to-black">
-      <CardDirectory cards={cards} categories={categories} />
-    </div>
+    <DirectoryClient initialCards={cards} initialCategories={categories} />
   );
 }
