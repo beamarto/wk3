@@ -62,7 +62,17 @@ export default function SubmitPage() {
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: { error?: string; success?: boolean } = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(
+          res.ok
+            ? "Invalid server response."
+            : text.slice(0, 120) || `Server error (${res.status}).`,
+        );
+      }
       if (!res.ok) throw new Error(data.error || "Submission failed.");
       setSubmitted(true);
       toast.success("Your card has been submitted for review!");
