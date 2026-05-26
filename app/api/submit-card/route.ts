@@ -28,6 +28,7 @@ export async function POST(request: Request) {
     const phone = (formData.get("phone") as string) || "";
     const website = (formData.get("website") as string) || "";
     const categoryId = parseCategoryId(formData.get("category_id"));
+    const bio = ((formData.get("bio") as string) || "").trim() || null;
     const photo = formData.get("photo");
 
     if (!name?.trim()) {
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
           phone,
           website,
           category_id: categoryId,
+          bio,
           status: "pending",
           session_id: sessionId,
         },
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
             <p><strong>Email:</strong> ${email || "—"}</p>
             <p><strong>Phone:</strong> ${phone || "—"}</p>
             <p><strong>Website:</strong> ${website || "—"}</p>
+            <p><strong>Bio:</strong> ${bio || "—"}</p>
             ${photoUrl ? `<p><img src="${photoUrl}" width="120" style="border-radius:50%"/></p>` : ""}
             <p><a href="${adminUrl}">Review submission</a></p>
           `,

@@ -4,11 +4,7 @@ import AuthButton from "@/app/components/AuthButton";
 import CardDirectory from "@/app/components/CardDirectory";
 import DeleteConfirmModal from "@/app/components/DeleteConfirmModal";
 import { supabase } from "@/lib/supabase";
-import {
-  getStoragePathFromPublicUrl,
-  saveProfilePhotoUrl,
-  uploadProfilePhoto,
-} from "@/lib/storage";
+import { getStoragePathFromPublicUrl } from "@/lib/storage";
 import type { CardWithCategory, Category } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
@@ -104,81 +100,64 @@ export default function DirectoryClient({
     }
   }, [user, refreshCategories]);
 
-  const attachPhotoToCard = async (cardId: string, file: File) => {
-    const { url, error: uploadError } = await uploadProfilePhoto(
-      supabase,
-      cardId,
-      file,
-    );
-    if (uploadError) {
-      toast.error(`Photo upload failed: ${uploadError}`, { duration: 6000 });
-      return false;
-    }
-    if (!url) {
-      toast.error("Photo upload failed.", { duration: 6000 });
-      return false;
-    }
+  const saveCardViaApi = async (
+    fields: typeof EMPTY_FORM,
+    options: { id?: string; photo?: File | null },
+  ) => {
+    const formData = new FormData();
+    if (options.id) formData.append("id", options.id);
+    formData.append("name", fields.name.trim());
+    formData.append("title", fields.title);
+    formData.append("email", fields.email);
+    formData.append("phone", fields.phone);
+    formData.append("website", fields.website);
+    formData.append("category_id", fields.category_id);
+    formData.append("bio", fields.bio);
+    if (options.photo) formData.append("photo", options.photo);
 
-    const updateError = await saveProfilePhotoUrl(supabase, cardId, url);
-    if (updateError) {
-      toast.error(
-        `Photo uploaded but could not link to card: ${updateError}. Run supabase/step2b-cards-photo-update.sql if using public submit, or check admin RLS.`,
-        { duration: 8000 },
-      );
-      return false;
+    const res = await fetch("/api/admin/save-card", {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+    });
+    const data = (await res.json()) as {
+      error?: string;
+      success?: boolean;
+      photoWarning?: string | null;
+    };
+    if (!res.ok) {
+      throw new Error(data.error || "Could not save card.");
     }
-    return true;
+    return data;
   };
 
   const handleAdd = async () => {
-    const { name, title, email, phone, website, category_id, bio } =
-      addFormData;
-    if (!name.trim()) {
+    if (!addFormData.name.trim()) {
       toast.error("Name is required.");
       return;
     }
     setAdding(true);
-    const { data: inserted, error } = await supabase
-      .from("cards")
-      .insert([
-        {
-          name,
-          title,
-          email,
-          phone,
-          website,
-          category_id: category_id || null,
-          bio: bio.trim() || null,
-          status: "approved",
-          approved_at: new Date().toISOString(),
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      toast.error(`Add failed: ${error.message}`, { duration: 6000 });
+    try {
+      const data = await saveCardViaApi(addFormData, { photo: addPhoto });
+      await refreshCards();
+      setAddFormData(EMPTY_FORM);
+      setAddPhoto(null);
+      setShowAddForm(false);
+      if (data.photoWarning) {
+        toast.warning(data.photoWarning, { duration: 8000 });
+      } else {
+        toast.success(
+          addPhoto ? "Card and photo saved." : "Card added.",
+        );
+      }
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Add failed.",
+        { duration: 6000 },
+      );
+    } finally {
       setAdding(false);
-      return;
     }
-
-    let photoOk = true;
-    if (addPhoto && inserted) {
-      photoOk = await attachPhotoToCard(inserted.id, addPhoto);
-    }
-
-    await refreshCards();
-    setAddFormData(EMPTY_FORM);
-    setAddPhoto(null);
-    setShowAddForm(false);
-    setAdding(false);
-    toast.success(
-      addPhoto && !photoOk
-        ? "Card saved, but profile photo could not be linked."
-        : addPhoto
-          ? "Card and photo saved."
-          : "Card added.",
-    );
   };
 
   const handleUpdate = async (
@@ -186,35 +165,22 @@ export default function DirectoryClient({
     fields: typeof EMPTY_FORM,
     photoFile?: File | null,
   ) => {
-    const { error } = await supabase
-      .from("cards")
-      .update({
-        name: fields.name,
-        title: fields.title,
-        email: fields.email,
-        phone: fields.phone,
-        website: fields.website,
-        category_id: fields.category_id || null,
-        bio: fields.bio.trim() || null,
-      })
-      .eq("id", id);
-
-    if (error) {
-      toast.error(`Update failed: ${error.message}`, { duration: 6000 });
+    try {
+      const data = await saveCardViaApi(fields, { id, photo: photoFile });
+      await refreshCards();
+      if (data.photoWarning) {
+        toast.warning(data.photoWarning, { duration: 8000 });
+      } else {
+        toast.success("Card updated.");
+      }
+      return true;
+    } catch (err: unknown) {
+      toast.error(
+        err instanceof Error ? err.message : "Update failed.",
+        { duration: 6000 },
+      );
       return false;
     }
-
-    if (photoFile) {
-      const photoOk = await attachPhotoToCard(id, photoFile);
-      if (!photoOk) {
-        await refreshCards();
-        return false;
-      }
-    }
-
-    await refreshCards();
-    toast.success("Card updated.");
-    return true;
   };
 
   const handleDelete = async () => {
@@ -272,6 +238,7 @@ export default function DirectoryClient({
           setAddPhoto(null);
         }}
         onAddFormChange={setAddFormData}
+        addPhoto={addPhoto}
         onAddPhotoChange={setAddPhoto}
         onAdd={handleAdd}
         onUpdate={handleUpdate}

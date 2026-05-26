@@ -57,6 +57,7 @@ type CardDirectoryProps = {
   adding?: boolean;
   onToggleAddForm?: () => void;
   onAddFormChange?: (data: AddFormData) => void;
+  addPhoto?: File | null;
   onAddPhotoChange?: (file: File | null) => void;
   onAdd?: () => void;
   onUpdate?: (
@@ -76,6 +77,7 @@ export default function CardDirectory({
   adding = false,
   onToggleAddForm,
   onAddFormChange,
+  addPhoto = null,
   onAddPhotoChange,
   onAdd,
   onUpdate,
@@ -238,13 +240,28 @@ export default function CardDirectory({
                 <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   Profile photo (optional)
                 </label>
+                <div className="mb-2 flex items-center gap-3">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={
+                      addPhoto
+                        ? URL.createObjectURL(addPhoto)
+                        : `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(addFormData.name || "new")}`
+                    }
+                    alt=""
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-zinc-200"
+                  />
+                  <span className="text-xs text-zinc-500">
+                    {addPhoto ? "Photo selected" : "Upload a profile photo"}
+                  </span>
+                </div>
                 <input
                   type="file"
                   accept="image/png,image/jpeg"
                   onChange={(e) =>
                     onAddPhotoChange(e.target.files?.[0] ?? null)
                   }
-                  className="w-full text-sm text-zinc-500"
+                  className="w-full text-sm text-zinc-500 file:mr-3 file:rounded-full file:border-0 file:bg-amber-100 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-amber-900"
                 />
               </div>
             )}

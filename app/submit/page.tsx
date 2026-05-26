@@ -1,6 +1,8 @@
 "use client";
 
+import BioTextarea from "@/app/components/BioTextarea";
 import { supabase } from "@/lib/supabase";
+import type { GenerateBioInput } from "@/lib/stream-bio";
 import type { Category } from "@/lib/types";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -8,6 +10,33 @@ import { toast } from "sonner";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
+
+function categoryName(categories: Category[], categoryId: string) {
+  return categories.find((c) => c.id === categoryId)?.name ?? "";
+}
+
+function bioGenerateInput(
+  form: {
+    name: string;
+    title: string;
+    business: string;
+    category_id: string;
+  },
+  categories: Category[],
+): GenerateBioInput {
+  const name = form.name.trim();
+  const business = form.business.trim() || name;
+  return {
+    name,
+    title: form.title.trim() || "Professional",
+    business,
+    category: categoryName(categories, form.category_id) || undefined,
+  };
+}
+
+function canGenerateBio(form: { name: string }) {
+  return Boolean(form.name.trim());
+}
 
 function CafeCardIcon({ className = "h-9 w-9" }: { className?: string }) {
   return (
@@ -32,10 +61,12 @@ export default function SubmitPage() {
   const [form, setForm] = useState({
     name: "",
     title: "",
+    business: "",
     email: "",
     phone: "",
     website: "",
     category_id: "",
+    bio: "",
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
@@ -166,6 +197,7 @@ export default function SubmitPage() {
               [
                 ["Name", "name", true, "text"],
                 ["Title", "title", false, "text"],
+                ["Company / café", "business", false, "text"],
                 ["Email", "email", false, "email"],
                 ["Phone", "phone", false, "text"],
               ] as const
@@ -215,6 +247,14 @@ export default function SubmitPage() {
                 onChange={(e) =>
                   setForm({ ...form, website: e.target.value })
                 }
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <BioTextarea
+                value={form.bio}
+                onChange={(bio) => setForm({ ...form, bio })}
+                generateInput={bioGenerateInput(form, categories)}
+                canGenerate={canGenerateBio(form)}
               />
             </div>
             <div className="sm:col-span-2">

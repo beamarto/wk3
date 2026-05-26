@@ -124,6 +124,11 @@ export default function SubmissionsPage() {
                     {card.phone && <span>{card.phone}</span>}
                     {card.website && <span>{card.website}</span>}
                   </div>
+                  {card.bio?.trim() && (
+                    <p className="mt-2 text-sm leading-relaxed text-zinc-600">
+                      {card.bio}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 flex-col gap-2">
                   <button

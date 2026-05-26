@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type StorageClient = Pick<SupabaseClient, "from" | "storage">;
-// test
+
 export function getStoragePathFromPublicUrl(url: string): string | null {
   const marker = "/profile-photos/";
   const index = url.indexOf(marker);
