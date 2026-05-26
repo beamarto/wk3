@@ -10,7 +10,8 @@ type PageProps = {
 function cardAvatar(card: CardWithCategory) {
   return (
     card.profile_photo_url ||
-    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(card.name)}`;
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(card.name)}`
+  );
 }
 
 export default async function ViewCardPage({ params }: PageProps) {
