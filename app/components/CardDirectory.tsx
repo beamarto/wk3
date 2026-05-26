@@ -43,14 +43,15 @@ export default function CardDirectory({
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-6 py-12 sm:px-10">
       <header className="space-y-2 text-center sm:text-left">
         <p className="text-sm font-medium uppercase tracking-widest text-amber-700 dark:text-amber-400">
-          Week 3 · Live directory
+          Local coffee & café guide
         </p>
         <h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Business Card Directory
+          Café Contact Directory
         </h1>
-        <p className="max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-          Browse contacts by category. Data loads from Supabase — edit a card in
-          the dashboard and refresh to see updates.
+        <p className="max-w-md text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          Browse local cafés by category, or tap{" "}
+          <span className="font-medium text-zinc-800 dark:text-zinc-200">All</span>{" "}
+          to see everyone.
         </p>
       </header>
 

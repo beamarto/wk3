@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Business Card Directory",
-  description: "Week 3 directory powered by Supabase",
+  title: "Café Contact Directory",
+  description: "Browse local coffee shops and cafés by category",
 };
 
 export default function RootLayout({
