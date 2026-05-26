@@ -56,6 +56,11 @@ export default function BioTextarea({
           type="button"
           onClick={handleGenerate}
           disabled={!canGenerate || generating}
+          title={
+            canGenerate
+              ? undefined
+              : "Enter a name first to generate a bio"
+          }
           className="rounded-full bg-zinc-800 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300 disabled:text-zinc-500"
         >
           {generating ? "Generating…" : "Generate bio"}

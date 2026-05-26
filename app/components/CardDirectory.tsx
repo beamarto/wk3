@@ -27,20 +27,18 @@ function bioGenerateInput(
   form: AddFormData,
   categories: Category[],
 ): GenerateBioInput {
-  const business = form.business.trim() || form.name.trim();
+  const name = form.name.trim();
+  const business = form.business.trim() || name;
   return {
-    name: form.name.trim(),
-    title: form.title.trim(),
+    name,
+    title: form.title.trim() || "Professional",
     business,
     category: categoryName(categories, form.category_id) || undefined,
   };
 }
 
 function canGenerateBio(form: AddFormData) {
-  const business = form.business.trim() || form.name.trim();
-  return Boolean(
-    form.name.trim() && form.title.trim() && business,
-  );
+  return Boolean(form.name.trim());
 }
 
 function cardAvatar(card: CardWithCategory) {
