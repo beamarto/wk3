@@ -2,6 +2,7 @@
 
 import type { CardWithCategory, Category } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 function cardAvatar(card: CardWithCategory) {
@@ -332,8 +333,13 @@ export default function CardDirectory({
                       </div>
                     ) : (
                       <>
-                        <h2 className="truncate text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                          {card.name}
+                        <h2 className="truncate text-lg font-semibold">
+                          <Link
+                            href={`/cards/${card.id}`}
+                            className="text-zinc-900 hover:text-amber-800 hover:underline dark:text-zinc-50 dark:hover:text-amber-300"
+                          >
+                            {card.name}
+                          </Link>
                         </h2>
                         <p className="truncate text-sm text-zinc-600 dark:text-zinc-400">
                           {card.title}
