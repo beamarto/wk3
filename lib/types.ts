@@ -4,6 +4,8 @@ export type Category = {
   color: string;
 };
 
+export type CardStatus = "pending" | "approved" | "rejected";
+
 export type CardWithCategory = {
   id: string;
   name: string;
@@ -11,6 +13,10 @@ export type CardWithCategory = {
   email: string;
   phone: string;
   website: string;
-  category_id: string;
+  category_id: string | null;
+  status?: CardStatus;
+  profile_photo_url?: string | null;
+  approved_at?: string | null;
+  session_id?: string | null;
   categories: Pick<Category, "name" | "color"> | null;
 };

@@ -4,8 +4,11 @@ import type { CardWithCategory, Category } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import { useMemo, useState } from "react";
 
-function avatarUrl(name: string) {
-  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
+function cardAvatar(card: CardWithCategory) {
+  return (
+    card.profile_photo_url ||
+    `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(card.name)}`
+  );
 }
 
 type AddFormData = {
@@ -26,17 +29,14 @@ type CardDirectoryProps = {
   adding?: boolean;
   onToggleAddForm?: () => void;
   onAddFormChange?: (data: AddFormData) => void;
+  onAddPhotoChange?: (file: File | null) => void;
   onAdd?: () => void;
   onUpdate?: (
     id: string,
-    fields: {
-      name: string;
-      title: string;
-      email: string;
-      phone: string;
-      website: string;
-    },
+    fields: AddFormData,
+    photoFile?: File | null,
   ) => Promise<boolean>;
+  onDeleteRequest?: (card: CardWithCategory) => void;
 };
 
 export default function CardDirectory({
@@ -48,14 +48,17 @@ export default function CardDirectory({
   adding = false,
   onToggleAddForm,
   onAddFormChange,
+  onAddPhotoChange,
   onAdd,
   onUpdate,
+  onDeleteRequest,
 }: CardDirectoryProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<AddFormData | null>(null);
+  const [editPhoto, setEditPhoto] = useState<File | null>(null);
 
   const countByCategory = useMemo(() => {
     const counts = new Map<string, number>();
@@ -63,10 +66,12 @@ export default function CardDirectory({
       counts.set(category.id, 0);
     }
     for (const card of cards) {
-      counts.set(
-        card.category_id,
-        (counts.get(card.category_id) ?? 0) + 1,
-      );
+      if (card.category_id) {
+        counts.set(
+          card.category_id,
+          (counts.get(card.category_id) ?? 0) + 1,
+        );
+      }
     }
     return counts;
   }, [cards, categories]);
@@ -78,28 +83,24 @@ export default function CardDirectory({
 
   const startEdit = (card: CardWithCategory) => {
     setEditingId(card.id);
+    setEditPhoto(null);
     setEditFormData({
       name: card.name,
       title: card.title,
       email: card.email,
       phone: card.phone,
       website: card.website,
-      category_id: card.category_id,
+      category_id: card.category_id ?? "",
     });
   };
 
   const saveEdit = async (id: string) => {
     if (!editFormData || !onUpdate) return;
-    const ok = await onUpdate(id, {
-      name: editFormData.name,
-      title: editFormData.title,
-      email: editFormData.email,
-      phone: editFormData.phone,
-      website: editFormData.website,
-    });
+    const ok = await onUpdate(id, editFormData, editPhoto);
     if (ok) {
       setEditingId(null);
       setEditFormData(null);
+      setEditPhoto(null);
     }
   };
 
@@ -195,6 +196,21 @@ export default function CardDirectory({
                 }
               />
             </div>
+            {onAddPhotoChange && (
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                  Profile photo (optional)
+                </label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={(e) =>
+                    onAddPhotoChange(e.target.files?.[0] ?? null)
+                  }
+                  className="w-full text-sm text-zinc-500"
+                />
+              </div>
+            )}
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button
@@ -275,11 +291,11 @@ export default function CardDirectory({
                 <div className="flex items-center gap-4 border-b border-zinc-100 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={avatarUrl(card.name)}
+                    src={cardAvatar(card)}
                     alt=""
                     width={56}
                     height={56}
-                    className="h-14 w-14 rounded-full bg-white ring-2 ring-zinc-200 dark:ring-zinc-700"
+                    className="h-14 w-14 rounded-full bg-white object-cover ring-2 ring-zinc-200 dark:ring-zinc-700"
                   />
                   <div className="min-w-0 flex-1">
                     {isEditing && editFormData ? (
@@ -331,6 +347,23 @@ export default function CardDirectory({
 
                   {isEditing && editFormData ? (
                     <div className="space-y-2">
+                      <select
+                        className="w-full rounded border px-2 py-1 text-sm"
+                        value={editFormData.category_id}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            category_id: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">— Category —</option>
+                        {categories.map((cat) => (
+                          <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </option>
+                        ))}
+                      </select>
                       <input
                         className="w-full rounded border px-2 py-1 text-sm"
                         value={editFormData.email}
@@ -364,6 +397,14 @@ export default function CardDirectory({
                         }
                         placeholder="Website"
                       />
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg"
+                        onChange={(e) =>
+                          setEditPhoto(e.target.files?.[0] ?? null)
+                        }
+                        className="w-full text-xs text-zinc-500"
+                      />
                       <div className="flex gap-2 pt-1">
                         <button
                           type="button"
@@ -377,6 +418,7 @@ export default function CardDirectory({
                           onClick={() => {
                             setEditingId(null);
                             setEditFormData(null);
+                            setEditPhoto(null);
                           }}
                           className="rounded bg-zinc-100 px-3 py-1 text-xs font-bold uppercase text-zinc-600"
                         >
@@ -405,14 +447,27 @@ export default function CardDirectory({
                           {card.website.replace(/^https?:\/\//, "")}
                         </a>
                       )}
-                      {user && onUpdate && (
-                        <button
-                          type="button"
-                          onClick={() => startEdit(card)}
-                          className="mt-2 w-fit rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase text-amber-800 hover:bg-amber-700 hover:text-white"
-                        >
-                          Edit card
-                        </button>
+                      {user && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {onUpdate && (
+                            <button
+                              type="button"
+                              onClick={() => startEdit(card)}
+                              className="rounded border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase text-amber-800 hover:bg-amber-700 hover:text-white"
+                            >
+                              Edit card
+                            </button>
+                          )}
+                          {onDeleteRequest && (
+                            <button
+                              type="button"
+                              onClick={() => onDeleteRequest(card)}
+                              className="rounded border border-red-100 bg-red-50 px-2 py-1 text-[10px] font-bold uppercase text-red-600 hover:bg-red-600 hover:text-white"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
                       )}
                     </>
                   )}

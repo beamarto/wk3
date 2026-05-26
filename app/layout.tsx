@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import TailwindSafelist from "@/app/components/TailwindSafelist";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,6 +32,14 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <TailwindSafelist />
         {children}
+        <Toaster
+          position="top-center"
+          richColors
+          toastOptions={{
+            duration: 4000,
+            style: { fontSize: "14px" },
+          }}
+        />
       </body>
     </html>
   );

@@ -11,6 +11,7 @@ export default async function Home() {
     supabase
       .from("cards")
       .select("*, categories(name, color)")
+      .eq("status", "approved")
       .order("name"),
     supabase.from("categories").select("*").order("name"),
   ]);
