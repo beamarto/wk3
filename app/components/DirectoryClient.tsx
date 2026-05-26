@@ -15,10 +15,12 @@ import { toast } from "sonner";
 const EMPTY_FORM = {
   name: "",
   title: "",
+  business: "",
   email: "",
   phone: "",
   website: "",
   category_id: "",
+  bio: "",
 };
 
 type DirectoryClientProps = {
@@ -85,7 +87,8 @@ export default function DirectoryClient({
   }, [router, refreshCategories]);
 
   const handleAdd = async () => {
-    const { name, title, email, phone, website, category_id } = addFormData;
+    const { name, title, email, phone, website, category_id, bio } =
+      addFormData;
     if (!name.trim()) {
       toast.error("Name is required.");
       return;
@@ -101,6 +104,7 @@ export default function DirectoryClient({
           phone,
           website,
           category_id: category_id || null,
+          bio: bio.trim() || null,
           status: "approved",
           approved_at: new Date().toISOString(),
         },
@@ -134,14 +138,7 @@ export default function DirectoryClient({
 
   const handleUpdate = async (
     id: string,
-    fields: {
-      name: string;
-      title: string;
-      email: string;
-      phone: string;
-      website: string;
-      category_id: string;
-    },
+    fields: typeof EMPTY_FORM,
     photoFile?: File | null,
   ) => {
     const { error } = await supabase
@@ -153,6 +150,7 @@ export default function DirectoryClient({
         phone: fields.phone,
         website: fields.website,
         category_id: fields.category_id || null,
+        bio: fields.bio.trim() || null,
       })
       .eq("id", id);
 

@@ -1,8 +1,46 @@
 "use client";
 
+import BioTextarea from "@/app/components/BioTextarea";
+import CardBio from "@/app/components/CardBio";
+import type { GenerateBioInput } from "@/lib/stream-bio";
 import type { CardWithCategory, Category } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 import { useMemo, useState } from "react";
+
+export type AddFormData = {
+  name: string;
+  title: string;
+  business: string;
+  email: string;
+  phone: string;
+  website: string;
+  category_id: string;
+  bio: string;
+};
+
+function categoryName(categories: Category[], categoryId: string) {
+  return categories.find((c) => c.id === categoryId)?.name ?? "";
+}
+
+function bioGenerateInput(
+  form: AddFormData,
+  categories: Category[],
+): GenerateBioInput {
+  const business = form.business.trim() || form.name.trim();
+  return {
+    name: form.name.trim(),
+    title: form.title.trim(),
+    business,
+    category: categoryName(categories, form.category_id) || undefined,
+  };
+}
+
+function canGenerateBio(form: AddFormData) {
+  const business = form.business.trim() || form.name.trim();
+  return Boolean(
+    form.name.trim() && form.title.trim() && business,
+  );
+}
 
 function cardAvatar(card: CardWithCategory) {
   return (
@@ -10,15 +48,6 @@ function cardAvatar(card: CardWithCategory) {
     `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(card.name)}`
   );
 }
-
-type AddFormData = {
-  name: string;
-  title: string;
-  email: string;
-  phone: string;
-  website: string;
-  category_id: string;
-};
 
 type CardDirectoryProps = {
   cards: CardWithCategory[];
@@ -87,10 +116,12 @@ export default function CardDirectory({
     setEditFormData({
       name: card.name,
       title: card.title,
+      business: card.name,
       email: card.email,
       phone: card.phone,
       website: card.website,
       category_id: card.category_id ?? "",
+      bio: card.bio ?? "",
     });
   };
 
@@ -141,6 +172,7 @@ export default function CardDirectory({
               [
                 ["Name", "name", true],
                 ["Title", "title", false],
+                ["Company / café", "business", false],
                 ["Email", "email", false],
                 ["Phone", "phone", false],
               ] as const
@@ -211,6 +243,14 @@ export default function CardDirectory({
                 />
               </div>
             )}
+            <div className="sm:col-span-2">
+              <BioTextarea
+                value={addFormData.bio}
+                onChange={(bio) => onAddFormChange({ ...addFormData, bio })}
+                generateInput={bioGenerateInput(addFormData, categories)}
+                canGenerate={canGenerateBio(addFormData)}
+              />
+            </div>
           </div>
           <div className="mt-4 flex justify-end gap-2">
             <button
@@ -337,6 +377,9 @@ export default function CardDirectory({
                 </div>
 
                 <div className="flex flex-1 flex-col gap-3 px-5 py-4 text-sm">
+                  {!isEditing && (
+                    <CardBio bio={card.bio} cardId={card.id} />
+                  )}
                   {category && !isEditing && (
                     <span
                       className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold text-white ${category.color}`}
@@ -398,12 +441,34 @@ export default function CardDirectory({
                         placeholder="Website"
                       />
                       <input
+                        className="w-full rounded border px-2 py-1 text-sm"
+                        value={editFormData.business}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            business: e.target.value,
+                          })
+                        }
+                        placeholder="Company / café"
+                      />
+                      <input
                         type="file"
                         accept="image/png,image/jpeg"
                         onChange={(e) =>
                           setEditPhoto(e.target.files?.[0] ?? null)
                         }
                         className="w-full text-xs text-zinc-500"
+                      />
+                      <BioTextarea
+                        value={editFormData.bio}
+                        onChange={(bio) =>
+                          setEditFormData({ ...editFormData, bio })
+                        }
+                        generateInput={bioGenerateInput(
+                          editFormData,
+                          categories,
+                        )}
+                        canGenerate={canGenerateBio(editFormData)}
                       />
                       <div className="flex gap-2 pt-1">
                         <button
