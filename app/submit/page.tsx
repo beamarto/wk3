@@ -9,6 +9,25 @@ import { toast } from "sonner";
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png"];
 
+function CafeCardIcon({ className = "h-9 w-9" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 7h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
+      <path d="M8 11h8M8 14h5" />
+      <path d="M18 5v2" />
+    </svg>
+  );
+}
+
 export default function SubmitPage() {
   const [form, setForm] = useState({
     name: "",
@@ -87,7 +106,23 @@ export default function SubmitPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-amber-50 to-white px-4">
         <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-10 text-center shadow-sm">
-          <div className="mb-4 text-5xl">✅</div>
+          <div className="mb-4 flex justify-center">
+            {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={preview}
+                alt=""
+                className="h-20 w-20 rounded-full object-cover ring-4 ring-amber-100"
+              />
+            ) : (
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-800"
+                aria-hidden
+              >
+                <CafeCardIcon className="h-10 w-10" />
+              </div>
+            )}
+          </div>
           <h2 className="mb-2 text-2xl font-bold text-zinc-900">
             Submitted for review
           </h2>
