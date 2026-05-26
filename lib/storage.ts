@@ -32,7 +32,7 @@ export async function uploadProfilePhoto(
     .from("profile-photos")
     .upload(path, arrayBuffer, {
       contentType: file.type || "image/jpeg",
-      upsert: false,
+      upsert: true,
     });
 
   if (error) {

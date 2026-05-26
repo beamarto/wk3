@@ -91,7 +91,7 @@ export default function CardDirectory({
       email: card.email,
       phone: card.phone,
       website: card.website,
-      category_id: card.category_id ?? "",
+      category_id: card.category_id ? String(card.category_id) : "",
     });
   };
 
@@ -175,11 +175,17 @@ export default function CardDirectory({
                 }
               >
                 <option value="">— Select —</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
+                {categories.length === 0 ? (
+                  <option value="" disabled>
+                    No categories loaded
                   </option>
-                ))}
+                ) : (
+                  categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div className="sm:col-span-2">
@@ -292,6 +298,7 @@ export default function CardDirectory({
                 <div className="flex items-center gap-4 border-b border-zinc-100 bg-zinc-50 px-5 py-4 dark:border-zinc-800 dark:bg-zinc-950">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
+                    key={card.profile_photo_url ?? card.id}
                     src={cardAvatar(card)}
                     alt=""
                     width={56}
@@ -371,11 +378,17 @@ export default function CardDirectory({
                         }
                       >
                         <option value="">— Category —</option>
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>
-                            {cat.name}
+                        {categories.length === 0 ? (
+                          <option value="" disabled>
+                            No categories loaded — run step-categories-read.sql
                           </option>
-                        ))}
+                        ) : (
+                          categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))
+                        )}
                       </select>
                       <input
                         className="w-full rounded border px-2 py-1 text-sm"
@@ -410,14 +423,34 @@ export default function CardDirectory({
                         }
                         placeholder="Website"
                       />
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg"
-                        onChange={(e) =>
-                          setEditPhoto(e.target.files?.[0] ?? null)
-                        }
-                        className="w-full text-xs text-zinc-500"
-                      />
+                      <div className="rounded border border-dashed border-zinc-200 bg-zinc-50 p-2">
+                        <label className="mb-1 block text-[10px] font-bold uppercase text-zinc-500">
+                          Replace profile photo
+                        </label>
+                        <div className="mb-2 flex items-center gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={
+                              editPhoto
+                                ? URL.createObjectURL(editPhoto)
+                                : cardAvatar(card)
+                            }
+                            alt=""
+                            className="h-10 w-10 rounded-full object-cover"
+                          />
+                          <span className="text-xs text-zinc-500">
+                            {editPhoto ? "New photo selected" : "Choose a file to replace"}
+                          </span>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          onChange={(e) =>
+                            setEditPhoto(e.target.files?.[0] ?? null)
+                          }
+                          className="w-full text-xs text-zinc-500"
+                        />
+                      </div>
                       <div className="flex gap-2 pt-1">
                         <button
                           type="button"

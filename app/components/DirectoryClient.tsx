@@ -65,7 +65,15 @@ export default function DirectoryClient({
       .from("categories")
       .select("*")
       .order("name");
-    if (!error && data) setCategories(data);
+    if (error) {
+      toast.error(`Could not load categories: ${error.message}`, {
+        duration: 6000,
+      });
+      return;
+    }
+    if (data && data.length > 0) {
+      setCategories(data);
+    }
   }, []);
 
   useEffect(() => {
@@ -87,6 +95,12 @@ export default function DirectoryClient({
 
     return () => subscription.unsubscribe();
   }, [router, refreshCategories]);
+
+  useEffect(() => {
+    if (user) {
+      refreshCategories();
+    }
+  }, [user, refreshCategories]);
 
   const attachPhotoToCard = async (cardId: string, file: File) => {
     const { url, error: uploadError } = await uploadProfilePhoto(
@@ -144,14 +158,9 @@ export default function DirectoryClient({
       return;
     }
 
+    let photoOk = true;
     if (addPhoto && inserted) {
-      const photoUrl = await uploadProfilePhoto(supabase, inserted.id, addPhoto);
-      if (photoUrl) {
-        await supabase
-          .from("cards")
-          .update({ profile_photo_url: photoUrl })
-          .eq("id", inserted.id);
-      }
+      photoOk = await attachPhotoToCard(inserted.id, addPhoto);
     }
 
     await refreshCards();
@@ -159,7 +168,13 @@ export default function DirectoryClient({
     setAddPhoto(null);
     setShowAddForm(false);
     setAdding(false);
-    toast.success("Card added.");
+    toast.success(
+      addPhoto && !photoOk
+        ? "Card saved, but profile photo could not be linked."
+        : addPhoto
+          ? "Card and photo saved."
+          : "Card added.",
+    );
   };
 
   const handleUpdate = async (
