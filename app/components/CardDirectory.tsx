@@ -20,6 +20,20 @@ export default function CardDirectory({
     null,
   );
 
+  const countByCategory = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const category of categories) {
+      counts.set(category.id, 0);
+    }
+    for (const card of cards) {
+      counts.set(
+        card.category_id,
+        (counts.get(card.category_id) ?? 0) + 1,
+      );
+    }
+    return counts;
+  }, [cards, categories]);
+
   const visibleCards = useMemo(() => {
     if (!selectedCategoryId) return cards;
     return cards.filter((card) => card.category_id === selectedCategoryId);
@@ -44,28 +58,29 @@ export default function CardDirectory({
         <button
           type="button"
           onClick={() => setSelectedCategoryId(null)}
-          className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+          className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
             selectedCategoryId === null
               ? "bg-zinc-900 text-white shadow-md ring-2 ring-amber-400 ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900"
               : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
           }`}
         >
-          All
+          All ({cards.length})
         </button>
         {categories.map((category) => {
           const isSelected = selectedCategoryId === category.id;
+          const count = countByCategory.get(category.id) ?? 0;
           return (
             <button
               key={category.id}
               type="button"
               onClick={() => setSelectedCategoryId(category.id)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold text-white transition-all ${category.color} ${
+              className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold text-white transition-all ${category.color} ${
                 isSelected
                   ? "shadow-md ring-2 ring-white ring-offset-2 ring-offset-zinc-900 dark:ring-offset-zinc-950"
                   : "opacity-80 hover:opacity-100"
               }`}
             >
-              {category.name}
+              {category.name} ({count})
             </button>
           );
         })}
@@ -77,7 +92,9 @@ export default function CardDirectory({
 
       {visibleCards.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 px-6 py-16 text-center text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400">
-          No cards in this category yet.
+          {selectedCategoryId
+            ? "No cards in this category (0)."
+            : "No cards in the directory yet."}
         </p>
       ) : (
         <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
